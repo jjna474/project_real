@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Sound/SoundBase.h"
+#include "Components/AudioComponent.h"
 #include "RhythmManager.generated.h"
 
 UENUM(BlueprintType)
@@ -14,7 +16,7 @@ enum class ERhythmColor : uint8
 	Blue UMETA(DisplayName="Blue")
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHintColor, ERhythmColor, Color);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHintColor, ERhythmColor, InColor);
 
 UCLASS()
 class PROJECT_REAL_API ARhythmManager : public AActor
@@ -38,19 +40,29 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Rhythm")
 	float CurrentMusicTime = 0.0f;
 
-	UPROPERTY(BlueprintAssignable, Category = "Rhythm")
-	FOnHintColor OnHintColor;
+	//UPROPERTY(BlueprintAssignable, Category = "Rhythm")
+	//FOnHintColor OnHintColor;
 
 	UFUNCTION(BlueprintCallable, Category = "Rhythm")
 	void StartRhythm();
 
 private:
+	UPROPERTY(EditAnywhere,Category="Rhythm")
+	USoundBase* Music;
+
+	UPROPERTY(VisibleAnywhere,Category="Rhythm")
+	UAudioComponent* AudioComponent;
+
 	float StartTime = 0.0f;
 	bool bStarted = false;
 
 	int HintIndex = 0;
 	TArray<ERhythmColor> HintPattern;
 
+	float PreviousTime = 0.0f;
+
 	void PlayNextHint();
+
+
 
 };
