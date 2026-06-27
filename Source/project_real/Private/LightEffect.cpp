@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "RhythmManager.h"
+#include "LightEffect.h"
 
 // Sets default values
-ARhythmManager::ARhythmManager()
+ALightEffect::ALightEffect()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -12,21 +12,16 @@ ARhythmManager::ARhythmManager()
 }
 
 // Called when the game starts or when spawned
-void ARhythmManager::BeginPlay()
+void ALightEffect::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
 // Called every frame
-void ARhythmManager::Tick(float DeltaTime)
+void ALightEffect::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-}
-
-void ARhythmManager::StartRhythm()
-{
-	UE_LOG(LogTemp, Warning, TEXT("StartRhythm ½ÇÇàµÊ"));
 }
 
