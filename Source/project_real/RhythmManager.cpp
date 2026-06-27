@@ -56,13 +56,7 @@ void ARhythmManager::Tick(float DeltaTime)
 	PreviousTime = CurrentMusicTime;
 }
 
-<<<<<<< HEAD
-void ARhythmManager::StartRhythm()
-{
-	UE_LOG(LogTemp, Warning, TEXT("StartRhythm 실행됨"));
-}
 
-=======
 void ARhythmManager::StartRhythm()//랜덤 색 패턴 생성, 프리뷰(힌트 출력) 상태로 전환
 {
 	StartTime = GetWorld()->GetTimeSeconds();
@@ -138,4 +132,4 @@ void ARhythmManager::CheckInteraction(ERhythmColor InteractedColor)//플레이어가 
 		UE_LOG(LogTemp, Error, TEXT("Fail"));
 	}
 }
->>>>>>> 8678b9f4092d935c5251bc46b96e5e2c0899a18d
+
