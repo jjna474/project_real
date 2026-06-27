@@ -16,6 +16,14 @@ enum class ERhythmColor : uint8
 	Blue UMETA(DisplayName="Blue")
 };
 
+UENUM(BlueprintType)
+enum class ERhythmState :uint8
+{
+	Idle UMETA(DisplayName="Idle"),//아직 시작 전
+	Preview UMETA(DisplayName="Preview"),//정답 패턴 보여주는 시간
+	Playing UMETA(DisplayName="Playing")//플레이어가 상호작용 하는 시간
+};
+
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHintColor, ERhythmColor, InColor);
 
 UCLASS()
@@ -43,8 +51,12 @@ public:
 	//UPROPERTY(BlueprintAssignable, Category = "Rhythm")
 	//FOnHintColor OnHintColor;
 
+
 	UFUNCTION(BlueprintCallable, Category = "Rhythm")
 	void StartRhythm();
+
+	UFUNCTION(BlueprintCallable,Category="Rhythm")
+	void CheckInteraction(ERhythmColor InteractedColor);
 
 private:
 	UPROPERTY(EditAnywhere,Category="Rhythm")
@@ -53,15 +65,26 @@ private:
 	UPROPERTY(VisibleAnywhere,Category="Rhythm")
 	UAudioComponent* AudioComponent;
 
+	UPROPERTY(VisibleAnywhere,Category="Rhythm")
+	ERhythmState CurrentState = ERhythmState::Idle;
+
+	UPROPERTY(EditAnywhere,Category="Rhythm")
+	int32 PatternLength = 5;
+
+	UPROPERTY(EditAnywhere,Category="Rhythm")
+	float HitWindow = 0.2f;
+
 	float StartTime = 0.0f;
 	bool bStarted = false;
 
 	int HintIndex = 0;
+	int32 PlayerInputIndex = 0;
 	TArray<ERhythmColor> HintPattern;
 
 	float PreviousTime = 0.0f;
 
 	void PlayNextHint();
+	bool IsOnBeat() const;
 
 
 

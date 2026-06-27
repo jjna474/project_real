@@ -16,7 +16,7 @@ ARhythmManager::ARhythmManager()
 }
 
 // Called when the game starts or when spawned
-void ARhythmManager::BeginPlay()
+void ARhythmManager::BeginPlay() // 게임시작,음악 재생,리듬 시스템 시작
 {
 	Super::BeginPlay();
 
@@ -24,13 +24,10 @@ void ARhythmManager::BeginPlay()
 	{
 		AudioComponent->SetSound(Music);
 		AudioComponent->Play();
-		StartTime = GetWorld()->GetTimeSeconds();
-		bStarted = true;
+		
+		StartRhythm();
+
 		UE_LOG(LogTemp, Warning, TEXT("Music Start!"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Music is nullptr"));
 	}
 	
 }
@@ -40,30 +37,97 @@ void ARhythmManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bStarted && AudioComponent && AudioComponent->IsPlaying())
+	if (!bStarted) 
+		return;
+
+	CurrentMusicTime = GetWorld()->GetTimeSeconds() - StartTime;
+	float BeatInterval = 60.0f / BPM;
+	int CurrentBeat = FMath::FloorToInt(CurrentMusicTime / BeatInterval);
+	int PreviousBeat = FMath::FloorToInt(PreviousTime / BeatInterval);
+
+	if (CurrentState == ERhythmState::Preview)
 	{
-		CurrentMusicTime = GetWorld()->GetTimeSeconds() - StartTime;
-
-		if (FMath::FloorToInt(CurrentMusicTime) != FMath::FloorToInt(PreviousTime))
+		
+		if (CurrentBeat != PreviousBeat)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Current Music Time:%f"), CurrentMusicTime);
+			PlayNextHint();
 		}
-
-		PreviousTime = CurrentMusicTime;
 	}
+	PreviousTime = CurrentMusicTime;
 }
 
-void ARhythmManager::StartRhythm()
+void ARhythmManager::StartRhythm()//랜덤 색 패턴 생성, 프리뷰(힌트 출력) 상태로 전환
 {
 	StartTime = GetWorld()->GetTimeSeconds();
 	CurrentMusicTime = 0.0f;
 	bStarted = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("Rhythm Started"));
+	HintIndex = 0;
+	PlayerInputIndex = 0;
+	HintPattern.Empty();
+
+	for (int i = 0; i < PatternLength; i++)
+	{
+		int Random = FMath::RandRange(0, 2);
+		HintPattern.Add((ERhythmColor)Random);
+	}
+
+	CurrentState = ERhythmState::Preview;
+
+	UE_LOG(LogTemp, Warning, TEXT("Rhythm Started-Preview"));
+}
+
+// playnexthint 함수 현재는 로그만 출력, 여기서 발밑 파동 색 출력하면 돼
+void ARhythmManager::PlayNextHint()//다음 힌트 색 출력, 모든 힌트 출력하면 플레이 상태로 변경,
+{
+	if (HintIndex >= HintPattern.Num())
+	{
+		CurrentState = ERhythmState::Playing;
+
+		UE_LOG(LogTemp, Warning, TEXT("Player Turn"));
+
+		return;
+	}
+	ERhythmColor Color = HintPattern[HintIndex];
+
+	UE_LOG(LogTemp, Warning, TEXT("Hint %d : %d"), HintIndex, (int32)Color);
+	HintIndex++;
 }
 
 
-void ARhythmManager::PlayNextHint()
+bool ARhythmManager::IsOnBeat() const//현재 음악 박자 허용 범위 안에 있는지 검사
 {
-	UE_LOG(LogTemp, Warning, TEXT("PlayNextHint Called"));
+	float BeatInterval = 60.0f / BPM;
+
+	float NearestBeat = FMath::RoundToFloat(CurrentMusicTime / BeatInterval) * BeatInterval;
+
+	return FMath::Abs(CurrentMusicTime - NearestBeat) <= HitWindow;
+}
+
+//상호작용한 오브젝트의 색을 interactedColor로 전달해 호출함
+void ARhythmManager::CheckInteraction(ERhythmColor InteractedColor)//플레이어가 e키로 상호작용 했을 대 호출, 전달 받은 색과 현재 정답 색,타이밍 비교하여 성공/실패 판정
+{
+	if (CurrentState != ERhythmState::Playing)
+		return;
+	if (PlayerInputIndex >= HintPattern.Num())
+		return;
+
+	bool bColor = HintPattern[PlayerInputIndex] == InteractedColor;
+
+	bool bTiming = IsOnBeat();
+
+	if (bColor && bTiming)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Success"));
+		PlayerInputIndex++;
+		if (PlayerInputIndex >= HintPattern.Num())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Stage Clear"));
+		}
+	}
+
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Fail"));
+	}
 }
