@@ -39,10 +39,12 @@ void ARhythmManager::BeginPlay() // 게임시작,음악 재생,리듬 시스템 시작
 
 			AActor* ChildActor = ChildComp->GetChildActor();
 
-			if (ChildActor && ChildActor->GetClass()->GetName().Contains(TEXT("BP_RhythmCircle")))
+			if (ChildActor)
 			{
 				RhythmCircleActor = ChildActor;
-				UE_LOG(LogTemp, Warning, TEXT("Found RhythmCircle"));
+				UE_LOG(LogTemp, Warning, TEXT("Found ChildActor: %s / Class: %s"),
+					*ChildActor->GetName(),
+					*ChildActor->GetClass()->GetName());
 				break;
 			}
 		}
