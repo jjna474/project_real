@@ -3,6 +3,9 @@
 
 #include "RhythmManager.h"
 #include "Components/AudioComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/ChildActorComponent.h"
+#include "GameFramework/Character.h"
 
 // Sets default values
 ARhythmManager::ARhythmManager()
@@ -20,16 +23,40 @@ void ARhythmManager::BeginPlay() // 게임시작,음악 재생,리듬 시스템 시작
 {
 	Super::BeginPlay();
 
+	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+	if (Player)
+	{
+		TArray<UChildActorComponent*> ChildComps;
+		Player->GetComponents<UChildActorComponent>(ChildComps);
+
+		for (UChildActorComponent* ChildComp : ChildComps)
+		{
+			if (!ChildComp)
+			{
+				continue;
+			}
+
+			AActor* ChildActor = ChildComp->GetChildActor();
+
+			if (ChildActor && ChildActor->GetClass()->GetName().Contains(TEXT("BP_RhythmCircle")))
+			{
+				RhythmCircleActor = ChildActor;
+				UE_LOG(LogTemp, Warning, TEXT("Found RhythmCircle"));
+				break;
+			}
+		}
+	}
+
 	if (Music)
 	{
 		AudioComponent->SetSound(Music);
 		AudioComponent->Play();
-		
+
 		StartRhythm();
 
 		UE_LOG(LogTemp, Warning, TEXT("Music Start!"));
 	}
-	
 }
 
 // Called every frame
@@ -78,8 +105,9 @@ void ARhythmManager::StartRhythm()//랜덤 색 패턴 생성, 프리뷰(힌트 출력) 상태로 
 	UE_LOG(LogTemp, Warning, TEXT("Rhythm Started-Preview"));
 }
 
-// playnexthint 함수 현재는 로그만 출력, 여기서 발밑 파동 색 출력하면 돼
-void ARhythmManager::PlayNextHint()//다음 힌트 색 출력, 모든 힌트 출력하면 플레이 상태로 변경,
+// playnexthint 함수 현재는 로그만 출력, 여기서 발밑 파동 색 출력하면 돼,다음 힌트 색 출력, 모든 힌트 출력하면 플레이 상태로 변경
+
+void ARhythmManager::PlayNextHint()
 {
 	if (HintIndex >= HintPattern.Num())
 	{
@@ -89,7 +117,26 @@ void ARhythmManager::PlayNextHint()//다음 힌트 색 출력, 모든 힌트 출력하면 플레�
 
 		return;
 	}
+
 	ERhythmColor Color = HintPattern[HintIndex];
+
+	if (RhythmCircleActor)
+	{
+		UFunction* Function = RhythmCircleActor->FindFunction(TEXT("PlayPulse"));
+
+		if (Function)
+		{
+			struct FPlayPulseParams
+			{
+				FLinearColor NewColor;
+			};
+
+			FPlayPulseParams Params;
+			Params.NewColor = GetLinearColorFromRhythmColor(Color);
+
+			RhythmCircleActor->ProcessEvent(Function, &Params);
+		}
+	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Hint %d : %d"), HintIndex, (int32)Color);
 	HintIndex++;
@@ -133,3 +180,20 @@ void ARhythmManager::CheckInteraction(ERhythmColor InteractedColor)//플레이어가 
 	}
 }
 
+FLinearColor ARhythmManager::GetLinearColorFromRhythmColor(ERhythmColor Color) const
+{
+	switch (Color)
+	{
+	case ERhythmColor::Red:
+		return FLinearColor::Red;
+
+	case ERhythmColor::Yellow:
+		return FLinearColor::Yellow;
+
+	case ERhythmColor::Blue:
+		return FLinearColor::Blue;
+
+	default:
+		return FLinearColor::White;
+	}
+}

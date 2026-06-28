@@ -86,6 +86,9 @@ private:
 	void PlayNextHint();
 	bool IsOnBeat() const;
 
+	UPROPERTY()
+	AActor* RhythmCircleActor = nullptr;
 
+	FLinearColor GetLinearColorFromRhythmColor(ERhythmColor Color) const;
 
 };
